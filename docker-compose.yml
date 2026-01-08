@@ -1,0 +1,7 @@
+services:
+  app-python:
+    build: .
+    container_name: app-practica
+    restart: always
+    volumes:
+      - .:/app
