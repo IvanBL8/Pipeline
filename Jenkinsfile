@@ -4,27 +4,23 @@ pipeline {
     stages {
         stage('1. Limpieza y Preparación') {
             steps {
-                dir('/var/jenkins_home/workspace/mi-proyecto') {
-                    // 1. Intenta limpieza normal
-                    sh 'docker compose down || true'
-                    // 2. FUERZA BRUTA: Borra el contenedor por nombre si sigue ahí
-                    sh 'docker rm -f app-practica || true'
-                }
+                // Ya no usamos 'dir', ejecutamos directamente en la raíz del workspace
+                sh 'docker compose down || true'
+                sh 'docker rm -f app-practica || true'
             }
         }
 
         stage('2. Build & Deploy') {
             steps {
-                dir('/var/jenkins_home/workspace/mi-proyecto') {
-                    sh 'docker compose up -d --build'
-                }
+                // Aquí también quitamos el 'dir'
+                sh 'docker compose up -d --build'
             }
         }
 
         stage('3. Verificación') {
             steps {
                 sh 'docker ps'
-                // Esto mostrará el "Hola Mundo" en la consola de Jenkins
+                // Esto mostrará el mensaje de tu app.py en la consola de Jenkins
                 sh 'docker logs app-practica'
             }
         }
