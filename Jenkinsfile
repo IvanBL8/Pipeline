@@ -1,48 +1,33 @@
 pipeline {
     agent any
-
     stages {
-        stage('1. Preparación') {
+        // Quitamos la etapa 'Checkout' manual porque Jenkins ya la hace al principio
+        
+        stage('SonarQube Analysis') {
             steps {
-                echo 'Limpiando contenedores previos...'
-                sh 'docker compose down || true'
-                sh 'docker rm -f app-practica || true'
-            }
-        }
-
-        stage('2. SonarQube Analysis') {
-            steps {
-                echo 'Iniciando análisis de código en SonarQube...'
-                // 'Sonar' debe coincidir con el nombre en Administrar Jenkins > System
-                withSonarQubeEnv('Sonar') {
-                    sh '''
-                    docker run --rm \
-                    --network sistema-jenkins_devops-net \
-                    -e SONAR_HOST_URL="http://sonarqube:9000" \
-                    -e SONAR_TOKEN="${SONAR_AUTH_TOKEN}" \
-                    -v "${WORKSPACE}:/usr/src" \
-                    sonarsource/sonar-scanner-cli \
-                    -Dsonar.projectKey=mi-proyecto-python \
-                    -Dsonar.sources=.
-                    '''
+                script {
+                    def scannerHome = tool 'SonarQube Scanner'
+                    withSonarQubeEnv('SonarQube') {
+                        sh "${scannerHome}/bin/sonar-scanner \
+                        -Dsonar.projectKey=agenda-goles \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=http://sonarqube:9000"
+                    }
                 }
             }
         }
 
-        stage('3. Build & Deploy') {
+        stage('Build Image') {
             steps {
-                echo 'Construyendo y levantando la aplicación Python...'
-                sh 'docker compose up -d --build'
+                sh 'docker build -t fase1:latest .'
             }
         }
-    }
 
-    post {
-        success {
-            echo '¡Pipeline finalizado con éxito!'
-        }
-        failure {
-            echo 'El Pipeline ha fallado. Revisa los logs.'
+        stage('Run Container') {
+            steps {
+                sh 'docker rm -f test-container || true'
+                sh 'docker run --name test-container -d fase1:latest'
+            }
         }
     }
 }
