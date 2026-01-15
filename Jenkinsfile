@@ -20,8 +20,8 @@ pipeline {
 
         stage('2. Build Image') {
             steps {
-                // Esto sí funciona con Docker porque envía el contexto actual
-                sh 'docker build -t fase1:latest .'
+                // Añadimos --no-cache para asegurar que se construye con los últimos cambios de código
+                sh 'docker build --no-cache -t fase1:latest .'
             }
         }
 
