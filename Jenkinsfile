@@ -2,26 +2,28 @@ pipeline {
     agent any
 
     stages {
-        stage('1. Limpieza y Preparación') {
+        stage('1. Preparación') {
             steps {
-                // Ya no usamos 'dir', ejecutamos directamente en la raíz del workspace
+                // Limpiamos cualquier rastro anterior
                 sh 'docker compose down || true'
                 sh 'docker rm -f app-practica || true'
             }
         }
 
-        stage('2. Build & Deploy') {
+        stage('2. SonarQube Analysis') {
             steps {
-                // Aquí también quitamos el 'dir'
-                sh 'docker compose up -d --build'
+                // Usamos el servidor que configuramos en el paso anterior
+                withSonarQubeEnv('Sonar') {
+                    // Esto ejecuta el escáner sobre tu app.py
+                    sh 'docker run --rm -e SONAR_HOST_URL="http://sonarqube:9000" -v "${WORKSPACE}:/usr/src" sonarsource/sonar-scanner-cli -Dsonar.projectKey=mi-proyecto-python -Dsonar.sources=.'
+                }
             }
         }
 
-        stage('3. Verificación') {
+        stage('3. Build & Deploy') {
             steps {
-                sh 'docker ps'
-                // Esto mostrará el mensaje de tu app.py en la consola de Jenkins
-                sh 'docker logs app-practica'
+                // Levantamos la app si el análisis terminó
+                sh 'docker compose up -d --build'
             }
         }
     }
