@@ -4,7 +4,6 @@ pipeline {
         stage('1. SonarQube Analysis') {
             steps {
                 echo 'Iniciando análisis profundo...'
-                // Damos permisos totales a la carpeta actual para que el contenedor de Sonar pueda escribir
                 sh 'chmod -R 777 .'
                 
                 withSonarQubeEnv('SonarQube') {
@@ -14,9 +13,10 @@ pipeline {
                     -e SONAR_HOST_URL="http://sonarqube:9000" \
                     -e SONAR_TOKEN="${SONAR_AUTH_TOKEN}" \
                     -v "${WORKSPACE}:/usr/src" \
+                    -w /usr/src \
                     sonarsource/sonar-scanner-cli \
                     -Dsonar.projectKey=mi-proyecto-python \
-                    -Dsonar.sources=/usr/src \
+                    -Dsonar.sources=. \
                     -Dsonar.python.version=3 \
                     -Dsonar.scm.disabled=true
                     """
