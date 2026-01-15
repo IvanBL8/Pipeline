@@ -4,19 +4,21 @@ pipeline {
         stage('1. SonarQube Analysis') {
             steps {
                 echo 'Iniciando análisis profundo...'
+                // Damos permisos totales a la carpeta actual para que el contenedor de Sonar pueda escribir
+                sh 'chmod -R 777 .'
+                
                 withSonarQubeEnv('SonarQube') {
                     sh """
                     docker run --rm \
-                    --user \$(id -u):\$(id -g) \
                     --network sistema-jenkins_devops-net \
                     -e SONAR_HOST_URL="http://sonarqube:9000" \
                     -e SONAR_TOKEN="${SONAR_AUTH_TOKEN}" \
                     -v "${WORKSPACE}:/usr/src" \
                     sonarsource/sonar-scanner-cli \
                     -Dsonar.projectKey=mi-proyecto-python \
-                    -Dsonar.sources=. \
+                    -Dsonar.sources=/usr/src \
                     -Dsonar.python.version=3 \
-                    -Dsonar.working.directory=/usr/src/.scannerwork
+                    -Dsonar.scm.disabled=true
                     """
                 }
             }
