@@ -4,15 +4,17 @@ pipeline {
         stage('1. SonarQube Analysis') {
             steps {
                 script {
-                    // Esto descarga el scanner dentro de Jenkins (donde están tus archivos)
                     def scannerHome = tool 'SonarQube Scanner'
-                    
                     withSonarQubeEnv('SonarQube') {
                         sh "${scannerHome}/bin/sonar-scanner \
                         -Dsonar.projectKey=mi-proyecto-python \
                         -Dsonar.sources=. \
                         -Dsonar.python.version=3 \
                         -Dsonar.host.url=http://sonarqube:9000"
+                    }
+                    // Esto hace que Jenkins espere el veredicto de SonarQube
+                    timeout(time: 2, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: true
                     }
                 }
             }
