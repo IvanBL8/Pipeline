@@ -3,17 +3,20 @@ pipeline {
     stages {
         stage('1. SonarQube Analysis') {
             steps {
-                // 'SonarQube' debe ser el nombre que pongas en Administrar Jenkins > System
+                echo 'Iniciando análisis profundo...'
                 withSonarQubeEnv('SonarQube') {
                     sh """
                     docker run --rm \
+                    --user \$(id -u):\$(id -g) \
                     --network sistema-jenkins_devops-net \
                     -e SONAR_HOST_URL="http://sonarqube:9000" \
                     -e SONAR_TOKEN="${SONAR_AUTH_TOKEN}" \
                     -v "${WORKSPACE}:/usr/src" \
                     sonarsource/sonar-scanner-cli \
                     -Dsonar.projectKey=mi-proyecto-python \
-                    -Dsonar.sources=.
+                    -Dsonar.sources=. \
+                    -Dsonar.python.version=3 \
+                    -Dsonar.working.directory=/usr/src/.scannerwork
                     """
                 }
             }
